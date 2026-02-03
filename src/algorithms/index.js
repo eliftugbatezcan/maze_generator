@@ -2,11 +2,24 @@
 export const getUnvisitedNeighbors = (node, grid) => {
   const neighbors = [];
   const { col, row } = node;
-  if (row > 0) neighbors.push(grid[row - 1][col]);
-  if (row < grid.length - 1) neighbors.push(grid[row + 1][col]);
-  if (col > 0) neighbors.push(grid[row][col - 1]);
-  if (col < grid[0].length - 1) neighbors.push(grid[row][col + 1]);
-  return neighbors.filter(neighbor => !neighbor.isVisited && !neighbor.isWall);
+  
+  const directions = [
+    { r: -1, c: 0 }, 
+    { r: 1, c: 0 },  
+    { r: 0, c: -1 }, 
+    { r: 0, c: 1 }   
+  ];
+
+  for (const { r, c } of directions) {
+    const newRow = row + r;
+    const newCol = col + c;
+
+    if (grid[newRow] && grid[newRow][newCol]) {
+      neighbors.push(grid[newRow][newCol]);
+    }
+  }
+
+  return neighbors.filter(n => !n.isVisited && !n.isWall);
 };
 
 export const getNodesInShortestPathOrder = (finishNode) => {
@@ -41,52 +54,68 @@ export const bfs = (grid, startNode, finishNode) => {
 export const dfs = (grid, startNode, finishNode) => {
   const visitedNodesInOrder = [];
   const stack = [startNode];
-  while(stack.length) {
-      const currentNode = stack.pop();
-      if (!currentNode.isVisited) {
-          currentNode.isVisited = true;
-          visitedNodesInOrder.push(currentNode);
-          if (currentNode === finishNode) return visitedNodesInOrder;
-          const neighbors = getUnvisitedNeighbors(currentNode, grid);
-          for (const neighbor of neighbors) {
-              neighbor.previousNode = currentNode;
-              stack.push(neighbor);
-          }
+
+  startNode.isVisited = true;
+
+  while (stack.length > 0) {
+    const currentNode = stack.pop();
+    visitedNodesInOrder.push(currentNode);
+
+    if (currentNode === finishNode) {
+      return visitedNodesInOrder;
+    }
+
+    const neighbors = getUnvisitedNeighbors(currentNode, grid);
+
+    for (const neighbor of neighbors) {
+      if (!neighbor.isVisited) {
+        neighbor.isVisited = true;
+        neighbor.previousNode = currentNode;
+        stack.push(neighbor);
       }
+    }
   }
+
   return visitedNodesInOrder;
 };
 
 export const astar = (grid, startNode, finishNode) => {
   const visitedNodesInOrder = [];
   startNode.distance = 0;
+  startNode.heuristic = calculateManhattanDistance(startNode, finishNode);
   
-  let unvisitedNodes = [];
-  grid.forEach(r => r.forEach(n => unvisitedNodes.push(n)));
+  let openList = [startNode];
 
-  while (unvisitedNodes.length) {
-    unvisitedNodes.sort((nodeA, nodeB) => {
-        const fA = nodeA.distance + nodeA.heuristic;
-        const fB = nodeB.distance + nodeB.heuristic;
-        return fA - fB;
-    });
+  while (openList.length) {
+    openList.sort((a, b) => (a.distance + a.heuristic) - (b.distance + b.heuristic));
     
-    const closestNode = unvisitedNodes.shift();
+    const currentNode = openList.shift();
+    if (currentNode.isWall) continue;
+    if (currentNode.distance === Infinity) break;
 
-    if (closestNode.isWall) continue;
-    if (closestNode.distance === Infinity) return visitedNodesInOrder;
+    currentNode.isVisited = true;
+    visitedNodesInOrder.push(currentNode);
 
-    closestNode.isVisited = true;
-    visitedNodesInOrder.push(closestNode);
+    if (currentNode === finishNode) return visitedNodesInOrder;
 
-    if (closestNode === finishNode) return visitedNodesInOrder;
-
-    const neighbors = getUnvisitedNeighbors(closestNode, grid);
+    const neighbors = getUnvisitedNeighbors(currentNode, grid);
     for (const neighbor of neighbors) {
-      neighbor.distance = closestNode.distance + 1;
-      neighbor.heuristic = Math.abs(neighbor.col - finishNode.col) + Math.abs(neighbor.row - finishNode.row);
-      neighbor.previousNode = closestNode;
+      const tentativeDistance = currentNode.distance + 1;
+      
+      if (tentativeDistance < neighbor.distance) {
+        neighbor.previousNode = currentNode;
+        neighbor.distance = tentativeDistance;
+        neighbor.heuristic = calculateManhattanDistance(neighbor, finishNode);
+        
+        if (!openList.includes(neighbor)) {
+          openList.push(neighbor);
+        }
+      }
     }
   }
   return visitedNodesInOrder;
+};
+
+const calculateManhattanDistance = (nodeA, nodeB) => {
+  return Math.abs(nodeA.col - nodeB.col) + Math.abs(nodeA.row - nodeB.row);
 };
