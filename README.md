@@ -1,6 +1,8 @@
 # Maze Explorer — Pathfinding & Maze Generation Visualizer
 
 Maze Explorer is an interactive web application built with React and Vite that visualizes pathfinding algorithms and maze generation techniques on a grid. It is intended for learning, teaching, and experimenting with algorithm behavior and performance.
+![App Preview]<img width="1468" height="779" alt="image" src="https://github.com/user-attachments/assets/ebef8dee-bbe9-473e-8fee-d191017ccf80" />
+
 
 **Key features**
 
@@ -59,11 +61,6 @@ npm run preview
 - Add new algorithms: implement the algorithm as a pure function that accepts the grid and node identifiers, then returns the ordered visit list and path.
 - Add heuristics: for A\* or other informed search, expose configurable heuristic functions.
 - Add weighted grids: extend node objects to include weights (terrain costs) and adapt algorithms accordingly.
-
-## Development tips
-
-- Use the browser dev tools and Vite's HMR for fast feedback.
-- Keep algorithm functions pure to make writing unit tests straightforward.
 
 ## Contribution
 
